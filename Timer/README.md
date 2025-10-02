@@ -3,7 +3,6 @@
 - 보통 아날로그는 한 사이클이라고 안에서
 
 
-
 ```c
 void HAL_SYSTICK_Callback(void)
 {
@@ -108,16 +107,28 @@ HAL_TIM_Base_Start_IT(&htim1);
 2. 그 오른쪽에 있는 ARB1 Prescaler를 2로 그리고 APB1 Peripheral clocks (MHz)을 36으로 그 밑에있는걸 72로 바꾼다
 3. APB2 Peripheral clocks (MHz) 이것도 18 그리고 그 밑에있는 것도 36로 바꾼다
 ```
-
+- ARB1의 값은 Timer2에 가고 APB2는 Timer1에 값이 간다.
 ```
 그리고 TIM1을 사용을 할건데 TIM1에 들어가서 
 ```
 
-![alt text](./image/image.png)
 
 ```
 Timers에 들어가서 보면 TIM1에 들어가서 Clock Source를 Internal Clock으로 바꾼다 그리고 그 Configuration밑에 가면 NVIC Settings에 가면 
 TIM1 Break interrupt and TIM9 global interrupt에 에 체크를 하고 Sub Priority에 1로 설정 그리고 그밑에 있는
 
 TIM1 update interrupt and TIM10 global interrupt에 있는 Sub Priority를 2로 설정을 해준다
+```
+```
+그리고 Parameter Settings가서 밑에 Counter Settings를 보면 
+● Prescaler (PSC - 16 bits value)를 값을 36000 - 1로 해준다
+● 그리고 Counter Period (AutoReload Register - 16 bits value)를 값을 1000 - 1로 해준다.
+```
+- 이걸 해주는 이유가 일단 첫번째 36000을 해주는 이유가 보면 아까 우리가 Timer2에서 36을 해줬는데 이게 그냥 36Hz가 아니라 36MHz이기 때문에 36000000을 36000으로 나눠야하기 때문이다.
+- 나누면 1000이 나오는데 1초에 1Hz로 그니까 1초에 LED를 한번 깜빡이고 싶으면 1Hz로 만들어야하는데 나누면 1000이 나오니까 999를 나눠서 1Hz가 나오게 할려고 이다.
+
+- 어?? 근데 그러면 -1은 왜 해? 그냥 999로 하면 안돼?? 라고 할 수 있는데 보통 프로그래밍에서는 1이 아니라 0부터 시작을 하기 때문에 0에서 999까지 가는데 이게 오버플로우가 발생하면 999에서 1을 더하게 되면 다시 0으로 가서 작동이 되게 된다 그래서 1000 - 1을 하는 것이다 근데 사실상 999로 하는거나 다름이 없다.
+
+```
+그리고 1000 -1 해주고 나서 그 밑에 보면 auto-reload preload가 있는데 이거 Enable해주면 된다.
 ```
