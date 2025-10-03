@@ -143,7 +143,7 @@ TIM1 update interrupt and TIM10 global interrupt에 있는 Sub Priority를 2로 
 
 
 ## PWM 기본설정부터 해보자 ^^
-1. 일단 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
+1. 일단 ioc에 가서 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
 2. 그리고 가운데를 지점으로 왼쪽부분에 잘보면 PLL Source Mux라는게 조금만한 글씨로 써져 있다 거기 밑에 사다리꼴 모양에 HSI랑 HSE라는게 있는 아마 지금 HSI가 지정이 되어있을것이다 그걸 밑에있는 HSE로 지정을 하기 바란다.
 3. 그리고 나서 가운데 지점을 보면 System Clock Mux가 있는데 이것도 아마 HSI로 설정되어있을건데 이걸 맨 밑에있는 PLLCLK라는걸 지정한다 그리고
 4. 오른쪽에 보면 ARB2 timer clocks (MHz)가 있는데 이걸 36으로 쓰고 엔터!
@@ -201,7 +201,7 @@ int main(void)
 
 
 ## 다음은 PWM으로 서보모터를 돌릴 생각이다.
-1. 일단 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
+1. 일단 ioc에 가서 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
 2. 그리고 가운데를 지점으로 왼쪽부분에 잘보면 PLL Source Mux라는게 조금만한 글씨로 써져 있다 거기 밑에 사다리꼴 모양에 HSI랑 HSE라는게 있는 아마 지금 HSI가 지정이 되어있을것이다 그걸 밑에있는 HSE로 지정을 하기 바란다.
 3. 그리고 나서 가운데 지점을 보면 System Clock Mux가 있는데 이것도 아마 HSI로 설정되어있을건데 이걸 맨 밑에있는 PLLCLK라는걸 지정한다 그리고
 4. 오른쪽에 보면 ARB2 timer clocks (MHz)가 있는데 이걸 84으로 쓰고 엔터!
