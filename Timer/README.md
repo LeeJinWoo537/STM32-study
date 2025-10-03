@@ -132,3 +132,122 @@ TIM1 update interrupt and TIM10 global interrupt에 있는 Sub Priority를 2로 
 ```
 그리고 1000 -1 해주고 나서 그 밑에 보면 auto-reload preload가 있는데 이거 Enable해주면 된다.
 ```
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+
+📢 PWM 설명
+- 펄스 폭 변조라고도 하는데 우리가 아날로그를 사용하려고 하면 보통은 파형 주파수로 되어있다 보니까 값을 측정하거나 올라가는 값 혹은 내려가는 값 이런걸로 사용을 할 수가 있는데 디지털은 0과 1로 되어있다 보니까 값을 측정 못한다 그래서 나온게 PWM이다 PWM은 이제 디지털을 아날로그화 한거라고 생각하면 된다 그렇다고 진짜 아날로그로 변했다가 아니라 HIGH 되는 시간을 측정해 그걸 %로 나타내서 사용을 한다.
+
+
+## PWM 기본설정부터 해보자 ^^
+1. 일단 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
+2. 그리고 가운데를 지점으로 왼쪽부분에 잘보면 PLL Source Mux라는게 조금만한 글씨로 써져 있다 거기 밑에 사다리꼴 모양에 HSI랑 HSE라는게 있는 아마 지금 HSI가 지정이 되어있을것이다 그걸 밑에있는 HSE로 지정을 하기 바란다.
+3. 그리고 나서 가운데 지점을 보면 System Clock Mux가 있는데 이것도 아마 HSI로 설정되어있을건데 이걸 맨 밑에있는 PLLCLK라는걸 지정한다 그리고
+4. 오른쪽에 보면 ARB2 timer clocks (MHz)가 있는데 이걸 36으로 쓰고 엔터!
+5. 그리고 다시 Pinout & Configuration 여기로 돌아와서 왼쪽에 Timers에 TIM1에 들어가서 Clock Source에 있는걸 Internal Clock으로 바꾼다 그리고 그밑에있는 Channel1을 PWM Generation CH1으로 설정한다 그 밑에있는 Channel2도 PWM Generation CH2 로 설정을 해준다 왜냐면 LED를 2개 사용할거기 때문이다.
+6. 그리고 Prescaler (PSC - 16 bits value) 이걸 360 - 1로 설정을 해준다.
+7. 그리고 Counter Mode를 UP으로 설정하고
+8. Counter Period (AutoReload Register - 16 bits value )를 이걸 1000 - 1로 설정한다.
+9. 그리고  auto-reload Preload를 Enable로 설정을 하고 나서 밑으로 내리면
+10. PWM Generation Channel1이 보이는데 그 밑에 Mode가 있는데 이걸 PWM mode1로 설정을 하고 
+11. Pulse(16 bits value)가 있는데 이걸 250으로 바꿔준다 왜냐면 LED가 깜빡이는데 250이 기준이 될거기 때문이다.
+12. Output commpare Proload를 Enable로 설정을 해준다 나머지는 알아서 되는거라 이렇게 하고 PWM Heneration Channel2도 Mode를 PWM mode1로 맞춰주고 Pulse(16 bits value)를 750으로 하고 그밑에 Output commpare preload를 Enable로 설정을 해주면 끝이 난다.
+
+- 저 Pulse는 뭘 나타내는거냐면 250 그리고 750은 하나의 기준을 나타낸다 좀 있다가 코드 설명을 할 생각인데 HIGH > 250 < LOW, HIGH> 750 < LOW 되도록 LED1과 LED2가 깜빡일것이다 이제 코드로 넘어가자!
+
+```c
+int main(void)
+{
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_TIM1_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);   // 이건 PWM을 시작하겠다! 라는 의미 구조체 변수와 해당 타이머 채널이다.
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);   // 이것 역시 마찬가지
+  printf("\n TIM1 PWM test start!");
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+	  for (int duty = 0; duty < 1000; duty++)     // 0 ~ 999까지 계속 반복을 할거다.
+	  {
+		  TIM1->CCR1 = duty;      // 해당 값을 TIM1에 구조체에있는 CCR1에 값을 계속 넣겠다.
+		  TIM1->CCR2 = duty;
+		  HAL_Delay(10);    // 0.01초
+		  printf("\n\r Duty Value = %d", duty); 
+	  }
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+```
+- 우리는 이코드를 통해 값이 계속 0 ~ 999까지 반복을 하는데 그 안에서 LED1이 250이하이면 HIGH 이상이면 LOW로 가겠다 그리고 LED2는 750 이하면 HIGH 이상이면 LOW로 하겠다는 코드를 작성한거다.
+
+
+## 다음은 PWM으로 서보모터를 돌릴 생각이다.
+1. 일단 맨위에 보면 Pinout & Configuration이 있다 그 오른쪽에 바로 Clock Configuration이 있는데 그걸 클릭!
+2. 그리고 가운데를 지점으로 왼쪽부분에 잘보면 PLL Source Mux라는게 조금만한 글씨로 써져 있다 거기 밑에 사다리꼴 모양에 HSI랑 HSE라는게 있는 아마 지금 HSI가 지정이 되어있을것이다 그걸 밑에있는 HSE로 지정을 하기 바란다.
+3. 그리고 나서 가운데 지점을 보면 System Clock Mux가 있는데 이것도 아마 HSI로 설정되어있을건데 이걸 맨 밑에있는 PLLCLK라는걸 지정한다 그리고
+4. 오른쪽에 보면 ARB2 timer clocks (MHz)가 있는데 이걸 84으로 쓰고 엔터!
+5. 그리고 다시 Pinout & Configuration 여기로 돌아와서 왼쪽에 Timers에 TIM1에 들어가서 Clock Source에 있는걸 Internal Clock으로 바꾼다 그리고 그밑에있는 Channel1을 PWM Generation CH1으로 설정한다.
+6. 그리고 Prescaler (PSC - 16 bits value) 이걸 84 - 1로 설정을 해준다.
+7. 그리고 Counter Mode를 UP으로 설정하고
+8. Counter Period (AutoReload Register - 16 bits value )를 이걸 20000 - 1로 설정한다.
+9. 그리고  auto-reload Preload를 Enable로 설정을 하고 나서 밑으로 내리면
+10. PWM Generation Channel1이 보이는데 그 밑에 Mode가 있는데 이걸 PWM mode1로 설정을 하고 
+11. Pulse(16 bits value)가 있는데 이걸 1500으로 바꿔준다 왜냐면 지금 내가 사용하고 있는 이 서보모터가 90º 기준이 1500이기 때문이다.
+12. Output commpare prolad를 Enable로 설정하면 끝!
+
+- 아! 그리고 이거 계산하는거 말인데 계산하면 총 1/50 Hz가 나오는데 이거 역순하면 20ms가 나온다.
+
+```c
+int main(void)
+{
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);     // PWM을 시작하겠다라는 의미 
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+	  for(int i = -60; i <= 60; i += 10)
+	  {
+		  TIM2->CCR1 = 1500 + (i * 1000) / 60;
+		  HAL_Delay(1000);    // 1초
+	  }
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+```
+- 1초에 10도씩 가는 코드이다.
+- 1500 + (-60 * 1000) / 60 -> 500이 된다 이건 서보모터가 0도일 떄 상황이다.
